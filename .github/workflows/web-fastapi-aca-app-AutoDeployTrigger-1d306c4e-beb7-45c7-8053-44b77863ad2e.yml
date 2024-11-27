@@ -1,0 +1,48 @@
+name: Trigger auto deployment for web-fastapi-aca-app
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/web-fastapi-aca-app-AutoDeployTrigger-1d306c4e-beb7-45c7-8053-44b77863ad2e.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.WEBFASTAPIACAAPP_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.WEBFASTAPIACAAPP_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.WEBFASTAPIACAAPP_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          _dockerfilePathKey_: _dockerfilePath_
+          registryUrl: ca8c53402e94acr.azurecr.io
+          registryUsername: ${{ secrets.WEBFASTAPIACAAPP_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.WEBFASTAPIACAAPP_REGISTRY_PASSWORD }}
+          containerAppName: web-fastapi-aca-app
+          resourceGroup: rg-temp-demo-1
+          imageToBuild: ca8c53402e94acr.azurecr.io/web-fastapi-aca-app:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
