@@ -4,3 +4,4 @@ gunicorn
 jinja2
 python-multipart
 azure-servicebus
+python-dotenv
