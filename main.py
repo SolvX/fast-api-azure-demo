@@ -61,7 +61,7 @@ async def hello(request: Request, name: str = Form(...)):
         print('Request for hello page received with no name or blank name -- redirecting')
         return RedirectResponse(request.url_for("index"), status_code=status.HTTP_302_FOUND)
 
-@app.post("/enqueue/")
+@app.post("/enqueue")
 async def enqueue_message(message: dict):
 
     print("POST /enqueue/ called with:", message)  # Add debug log
@@ -77,7 +77,7 @@ async def enqueue_message(message: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/dequeue/")
+@app.get("/dequeue")
 async def dequeue_message():
     try:
         with ServiceBusClient.from_connection_string(CONNECTION_STR) as client:
@@ -96,14 +96,14 @@ async def dequeue_message():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/env/")
+@app.get("/env")
 async def get_env():
     return {
         "CONNECTION_STR": CONNECTION_STR,
         "QUEUE_NAME": QUEUE_NAME
     }
 
-@app.post("/test/")
+@app.post("/test")
 async def test_post(message: dict):
     return {"message": "POST request received", "data": message}
 
