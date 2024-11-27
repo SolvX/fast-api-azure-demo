@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Form, Request, status, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -14,10 +15,31 @@ load_dotenv(".env.local")
 CONNECTION_STR = os.getenv("SERVICE_BUS_CONNECTION_STRING")
 QUEUE_NAME = os.getenv("SERVICE_BUS_QUEUE_NAME")
 
+logging.basicConfig(
+    level=logging.INFO,  # Set the logging level to DEBUG
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("fastapi-requests")
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    # Log request details
+    logger.info(f"Request made to: {request.method} {request.url}")
+    logger.info(f"Headers: {request.headers}")
+    body = await request.body()
+    if body:
+        logger.info(f"Request body: {body.decode('utf-8')}")
+    else:
+        logger.info("No request body.")
+
+    # Process the request and get the response
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -41,6 +63,7 @@ async def hello(request: Request, name: str = Form(...)):
 
 @app.post("/enqueue/")
 async def enqueue_message(message: dict):
+
     print("POST /enqueue/ called with:", message)  # Add debug log
     try:
         with ServiceBusClient.from_connection_string(CONNECTION_STR) as client:
