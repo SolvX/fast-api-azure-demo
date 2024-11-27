@@ -6,7 +6,7 @@ import uvicorn
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
 import os
 from dotenv import load_dotenv
-
+from fastapi.middleware.cors import CORSMiddleware
 
 # load .env.local
 load_dotenv(".env.local")
@@ -16,6 +16,16 @@ CONNECTION_STR = os.getenv("SERVICE_BUS_CONNECTION_STRING")
 QUEUE_NAME = os.getenv("SERVICE_BUS_QUEUE_NAME")
 
 app = FastAPI()
+
+# Add CORS middleware to the app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins. Adjust this for production (e.g., ["https://example.com"])
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
