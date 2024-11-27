@@ -82,6 +82,17 @@ async def dequeue_message():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/env/")
+async def get_env():
+    return {
+        "CONNECTION_STR": CONNECTION_STR,
+        "QUEUE_NAME": QUEUE_NAME
+    }
+
+@app.post("/test/")
+async def test_post(message: dict):
+    return {"message": "POST request received", "data": message}
+
 
 
 if __name__ == '__main__':
