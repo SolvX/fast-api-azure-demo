@@ -21,7 +21,6 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins. Adjust this for production (e.g., ["https://example.com"])
-    allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],  # Allow all headers
 )
@@ -51,15 +50,16 @@ async def hello(request: Request, name: str = Form(...)):
 
 @app.post("/enqueue/")
 async def enqueue_message(message: dict):
+    print("POST /enqueue/ called with:", message)  # Add debug log
     try:
         with ServiceBusClient.from_connection_string(CONNECTION_STR) as client:
             sender = client.get_queue_sender(queue_name=QUEUE_NAME)
             with sender:
-                # Create and send the message
                 service_bus_message = ServiceBusMessage(str(message))
                 sender.send_messages(service_bus_message)
         return {"message": "Message enqueued successfully!"}
     except Exception as e:
+        print(f"Error in enqueue_message: {e}")  # Log any exception
         raise HTTPException(status_code=500, detail=str(e))
 
 
